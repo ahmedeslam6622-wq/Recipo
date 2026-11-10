@@ -1,54 +1,227 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="auto">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a84ff">
     <title>Recipo</title>
     <link rel="stylesheet" href="style.css">
     <script src="app.js" defer></script>
 </head>
 <body>
-    <h1>Recipo</h1>
-     <nav>
-   
+    <!-- Animated backdrop that the glass blurs against -->
+    <div class="backdrop" aria-hidden="true">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+    </div>
 
-    
+    <div class="app">
+        <header class="top">
+            <div class="title-row">
+                <h1>Recipo</h1>
+                <p class="stats" id="stats" aria-live="polite"></p>
+            </div>
 
-    <!-- Randomize Button -->
-    <button class="nav-button" id="randomize">
-        <svg xmlns="http://w3.org" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="8" y="8" width="48" height="48" rx="10" ry="10" fill="#ffffff" stroke="#111827" stroke-width="4"/>
-  <circle cx="22" cy="22" r="4" fill="#111827"/>
-  <circle cx="32" cy="32" r="4" fill="#111827"/>
-  <circle cx="42" cy="42" r="4" fill="#111827"/>
-</svg>
+            <div class="toolbar">
+                <label class="search glass" for="search">
+                    <span data-icon="search"></span>
+                    <input id="search" type="search" placeholder="Search recipes, ingredients, steps…" autocomplete="off" spellcheck="false">
+                    <button type="button" id="search-clear" class="icon-btn small" aria-label="Clear search" hidden><span data-icon="x"></span></button>
+                    <kbd id="search-hint">/</kbd>
+                </label>
+                <div class="select glass">
+                    <select id="sort" aria-label="Sort recipes">
+                        <option value="new">Newest</option>
+                        <option value="old">Oldest</option>
+                        <option value="az">A – Z</option>
+                        <option value="quick">Quickest</option>
+                        <option value="fav">Favorites first</option>
+                    </select>
+                </div>
+            </div>
 
-    </button>
-</nav>
+            <div class="chips" id="chips" role="tablist" aria-label="Categories"></div>
+        </header>
 
-     <button id="add">+</button>
+        <main>
+            <div id="recipe-container" class="grid"></div>
+            <div id="empty" class="empty glass" hidden></div>
+        </main>
+    </div>
 
-     <div id="recipe-container">
+    <!-- Floating dock -->
+    <nav class="dock glass" aria-label="Main">
+        <button class="dock-btn active" data-nav="all" aria-label="All recipes" title="All recipes"><span data-icon="home"></span></button>
+        <button class="dock-btn" data-nav="fav" aria-label="Favorites" title="Favorites"><span data-icon="heart"></span></button>
+        <button class="dock-btn add" id="add" aria-label="Add recipe" title="Add recipe (N)"><span data-icon="plus"></span></button>
+        <button class="dock-btn" id="open-shopping" aria-label="Shopping list" title="Shopping list">
+            <span data-icon="cart"></span><i class="badge" id="shop-badge" hidden>0</i>
+        </button>
+        <button class="dock-btn" id="randomize" aria-label="Random recipe" title="Surprise me (R)"><span data-icon="shuffle"></span></button>
+        <button class="dock-btn" id="open-settings" aria-label="Settings" title="Settings"><span data-icon="sliders"></span></button>
+    </nav>
 
-     </div>
+    <!-- ADD / EDIT -->
+    <div class="overlay" id="add-recipe-popup" hidden>
+        <form class="sheet glass-strong" id="recipe-form" role="dialog" aria-modal="true" aria-labelledby="form-title" novalidate>
+            <div class="sheet-head">
+                <div>
+                    <h2 id="form-title">Add recipe</h2>
+                    <p class="muted" id="form-sub">Fill in what you know, you can edit it later.</p>
+                </div>
+                <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="x"></span></button>
+            </div>
 
-     <div class="popup" id="randomize-popup">
-        <h2>Randomize</h2>
-    <h3>Chooses a random recipe from your creation</h3>
-    <button id="randomize-recipe">Randomize</button>
-    <button id="close-popup">x</button>
-</div>
+            <div class="field">
+                <label for="recipe-name">Name</label>
+                <input id="recipe-name" type="text" placeholder="e.g. Creamy tomato pasta" maxlength="80" autocomplete="off">
+            </div>
 
-<div class="popup" id="add-recipe-popup">
-        <h2>Add Recipe</h2>
-    <h3>Enter your recipe details</h3>
-    <input id="recipe-name" type="text" placeholder="Recipe Name">
-    <textarea id="recipe-ingredients" placeholder="Ingredients"></textarea>
-    <button id="save-recipe">Save</button>
-    <button id="close-add-popup">x</button>
-</div>
-<div id="recipe-container">
-    
-</div>
+            <div class="row">
+                <div class="field">
+                    <label for="recipe-category">Category</label>
+                    <select id="recipe-category"></select>
+                </div>
+                <div class="field">
+                    <label for="recipe-time">Time (min)</label>
+                    <input id="recipe-time" type="number" min="0" max="2000" inputmode="numeric" placeholder="30">
+                </div>
+                <div class="field">
+                    <label for="recipe-servings">Servings</label>
+                    <input id="recipe-servings" type="number" min="0" max="100" inputmode="numeric" placeholder="4">
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Icon</label>
+                <div class="emoji-picker" id="emoji-picker"></div>
+            </div>
+
+            <div class="field">
+                <label for="recipe-ingredients">Ingredients <span class="muted">one per line, start with an amount to enable scaling</span></label>
+                <textarea id="recipe-ingredients" rows="5" placeholder="200 g spaghetti&#10;2 cloves garlic&#10;1/2 cup parmesan"></textarea>
+            </div>
+
+            <div class="field">
+                <label for="recipe-steps">Instructions <span class="muted">one step per line</span></label>
+                <textarea id="recipe-steps" rows="4" placeholder="Boil the pasta in salted water.&#10;Fry the garlic, add tomatoes."></textarea>
+            </div>
+
+            <div class="field">
+                <label for="recipe-notes">Notes</label>
+                <textarea id="recipe-notes" rows="2" placeholder="Tips, substitutions, where the recipe came from…"></textarea>
+            </div>
+
+            <p class="form-error" id="form-error" role="alert" hidden></p>
+
+            <div class="sheet-actions">
+                <button type="button" class="btn" data-close>Cancel</button>
+                <button type="submit" class="btn primary" id="save-recipe">Save recipe</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- DETAIL -->
+    <div class="overlay" id="detail-modal" hidden>
+        <div class="sheet wide glass-strong" role="dialog" aria-modal="true" aria-label="Recipe">
+            <div id="detail-body"></div>
+        </div>
+    </div>
+
+    <!-- SHOPPING LIST -->
+    <div class="overlay" id="shopping-modal" hidden>
+        <div class="sheet glass-strong" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+            <div class="sheet-head">
+                <div>
+                    <h2 id="shop-title">Shopping list</h2>
+                    <p class="muted" id="shop-sub"></p>
+                </div>
+                <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="x"></span></button>
+            </div>
+            <form id="shop-form" class="inline-form">
+                <input id="shop-input" type="text" placeholder="Add an item…" autocomplete="off">
+                <button class="btn primary" type="submit">Add</button>
+            </form>
+            <ul class="shop-list" id="shop-list"></ul>
+            <div class="sheet-actions">
+                <button type="button" class="btn" id="shop-copy"><span data-icon="copy"></span>Copy</button>
+                <button type="button" class="btn" id="shop-clear-done">Clear checked</button>
+                <button type="button" class="btn danger" id="shop-clear-all">Clear all</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RANDOM -->
+    <div class="overlay" id="randomize-popup" hidden>
+        <div class="sheet glass-strong center" role="dialog" aria-modal="true" aria-labelledby="rand-title">
+            <button type="button" class="icon-btn corner" data-close aria-label="Close"><span data-icon="x"></span></button>
+            <h2 id="rand-title">Surprise me</h2>
+            <p class="muted">Picks a random recipe from your collection.</p>
+            <div class="rand-stage" id="rand-stage"></div>
+            <div class="sheet-actions center">
+                <button class="btn" id="randomize-recipe"><span data-icon="shuffle"></span>Roll again</button>
+                <button class="btn primary" id="rand-open" disabled>Open recipe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="overlay" id="settings-modal" hidden>
+        <div class="sheet glass-strong" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="sheet-head">
+                <div>
+                    <h2 id="settings-title">Settings</h2>
+                    <p class="muted">Everything is stored on this device only.</p>
+                </div>
+                <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="x"></span></button>
+            </div>
+
+            <div class="setting">
+                <span>Appearance</span>
+                <div class="segmented" id="theme-seg" role="radiogroup" aria-label="Theme">
+                    <button data-theme-set="auto" role="radio">Auto</button>
+                    <button data-theme-set="light" role="radio">Light</button>
+                    <button data-theme-set="dark" role="radio">Dark</button>
+                </div>
+            </div>
+
+            <div class="setting stack">
+                <span>Backup</span>
+                <div class="btn-row">
+                    <button class="btn" id="export-btn"><span data-icon="download"></span>Export</button>
+                    <button class="btn" id="import-btn"><span data-icon="upload"></span>Import</button>
+                    <input type="file" id="import-file" accept="application/json,.json" hidden>
+                </div>
+            </div>
+
+            <div class="setting stack">
+                <span>Collection</span>
+                <div class="btn-row">
+                    <button class="btn" id="sample-btn">Add sample recipes</button>
+                    <button class="btn danger" id="wipe-btn">Delete everything</button>
+                </div>
+            </div>
+
+            <div class="setting stack">
+                <span>Shortcuts</span>
+                <p class="muted shortcuts"><kbd>/</kbd> search &nbsp; <kbd>N</kbd> new recipe &nbsp; <kbd>R</kbd> random &nbsp; <kbd>Esc</kbd> close</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM -->
+    <div class="overlay top-layer" id="confirm-modal" hidden>
+        <div class="sheet small glass-strong center" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+            <h2 id="confirm-title">Are you sure?</h2>
+            <p class="muted" id="confirm-text"></p>
+            <div class="sheet-actions center">
+                <button class="btn" id="confirm-cancel">Cancel</button>
+                <button class="btn danger" id="confirm-ok">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
 </body>
 </html>
