@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipo</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <h1>Recipo</h1>
+     <nav>
+   
+
+    
+
+    <!-- Randomize Button -->
+    <button class="nav-button" id="randomize">
+        <svg xmlns="http://w3.org" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="8" y="8" width="48" height="48" rx="10" ry="10" fill="#ffffff" stroke="#111827" stroke-width="4"/>
+  <circle cx="22" cy="22" r="4" fill="#111827"/>
+  <circle cx="32" cy="32" r="4" fill="#111827"/>
+  <circle cx="42" cy="42" r="4" fill="#111827"/>
+</svg>
+
+    </button>
+</nav>
+
+     <button id="add">+</button>
+
+     <div id="recipe-container">
+
+     </div>
+
+     <div class="popup" id="randomize-popup">
+        <h2>Randomize</h2>
+    <h3>Chooses a random recipe from your creation</h3>
+    <button id="randomize-recipe">Randomize</button>
+    <button id="close-popup">x</button>
+</div>
+
+<div class="popup" id="add-recipe-popup">
+        <h2>Add Recipe</h2>
+    <h3>Enter your recipe details</h3>
+    <input id="recipe-name" type="text" placeholder="Recipe Name">
+    <textarea id="recipe-ingredients" placeholder="Ingredients"></textarea>
+    <button id="save-recipe">Save</button>
+    <button id="close-add-popup">x</button>
+</div>
+<div id="recipe-container">
+    
+</div>
+</body>
+</html>
